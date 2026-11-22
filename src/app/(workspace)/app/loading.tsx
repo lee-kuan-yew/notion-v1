@@ -1,1 +1,9 @@
-export default function Loading() {return <div className="animate-pulse"><div className="mb-6 h-8 w-48 rounded bg-soft"/><div className="grid gap-4 sm:grid-cols-4">{[1,2,3,4].map(i=><div key={i} className="h-28 rounded-xl bg-soft"/>)}</div><div className="mt-5 h-64 rounded-xl bg-soft"/></div>}
+import Ribbon from '@/components/ui/ribbon';
+
+export default function Loading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center text-ink dark:text-white" role="status" aria-label="Đang tải">
+      <Ribbon size={48} />
+    </div>
+  );
+}
