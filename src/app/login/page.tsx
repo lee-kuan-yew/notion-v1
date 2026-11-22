@@ -2,6 +2,7 @@ import { signIn } from './actions';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { isLocalMode } from '@/lib/local/mode';
+import { loginUsername, ownerLoginEmail } from '@/lib/auth/login-config';
 
 const dashV = 'absolute inset-y-[-48px] w-px border-l border-dashed border-stone-400/60';
 const dashH = 'absolute inset-x-[-48px] h-px border-t border-dashed border-stone-400/60';
@@ -10,7 +11,7 @@ const inputCls = 'h-12 w-full rounded-xl border border-stone-200 bg-white px-4 t
 export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   if (isLocalMode()) redirect('/app');
   const { error } = await searchParams;
-  const configured = !!process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL && !!process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY && !!process.env.PERSONAL_OS_OWNER_USER_ID;
+  const configured = !!process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL && !!process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY && !!process.env.PERSONAL_OS_OWNER_USER_ID && !!ownerLoginEmail;
   return (
     <main className="grid min-h-screen place-items-center bg-[#f5f5f5] p-5">
       <div className="relative w-full max-w-[460px] py-12">
@@ -29,8 +30,8 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
           <form action={signIn} className="grid gap-5">
             <div className="grid gap-2">
-              <label htmlFor="email" className="text-base font-medium text-stone-700">Email</label>
-              <input id="email" name="email" type="email" required placeholder="you@example.com" autoComplete="email" className={inputCls} />
+              <label htmlFor="username" className="text-base font-medium text-stone-700">Username</label>
+              <input id="username" name="username" type="text" required placeholder={loginUsername} autoComplete="username" className={inputCls} />
             </div>
             <div className="grid gap-2">
               <label htmlFor="password" className="text-base font-medium text-stone-700">Mật khẩu</label>
