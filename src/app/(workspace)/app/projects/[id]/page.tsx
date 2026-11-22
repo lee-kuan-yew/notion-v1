@@ -7,6 +7,7 @@ import { ProjectForm, MilestoneForm } from '@/features/projects/components/forms
 import { money, cents, projectProgress } from '@/lib/finance';
 import { dateVN, label } from '@/components/shared/format';
 import { PageHeader, Notice, Metric, Empty, Progress } from '@/components/shared/primitives';
+import { PriorityBadge } from '@/components/shared/priority';
 import { DeleteForm } from '@/components/shared/delete-form';
 
 export default async function ProjectDetail({
@@ -18,7 +19,13 @@ export default async function ProjectDetail({
 }) {
   const { id } = await params;
   const q = await searchParams;
-  const d = await loadProjectDetailWorkspace();
+  const tab = ['overview', 'tasks', 'milestones', 'expenses'].includes(q.tab ?? '') ? q.tab : 'overview';
+  const isDatabase = q.mode === 'database';
+  const [d, dbTasks, dbMilestones] = await Promise.all([
+    loadProjectDetailWorkspace(),
+    tab === 'tasks' && isDatabase ? loadDatabase('tasks', { projectId: id }) : Promise.resolve(null),
+    tab === 'milestones' && isDatabase ? loadDatabase('milestones', { projectId: id }) : Promise.resolve(null),
+  ]);
   const project = d.projects.find(p => p.id === id);
   if (!project) notFound();
   const projectTasks = d.tasks.filter(t => t.project_id === id);
@@ -27,12 +34,8 @@ export default async function ProjectDetail({
   const spent = cents(d.spending.find(p => p.project_id === id)?.spent ?? '0');
   const budget = project.budget_amount === null ? null : cents(project.budget_amount);
   const progress = projectProgress(projectTasks);
-  const tab = ['overview', 'tasks', 'milestones', 'expenses'].includes(q.tab ?? '') ? q.tab : 'overview';
   const accountNames = new Map(d.accounts.map(a => [a.id, a.name]));
   const categoryNames = new Map(d.categories.map(c => [c.id, c.name]));
-  const isDatabase = q.mode === 'database';
-  const dbTasks = tab === 'tasks' && isDatabase ? await loadDatabase('tasks', { projectId: id }) : null;
-  const dbMilestones = tab === 'milestones' && isDatabase ? await loadDatabase('milestones', { projectId: id }) : null;
 
   return (
     <>
@@ -74,7 +77,16 @@ export default async function ProjectDetail({
       {tab === 'overview' && (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric label="Trạng thái" value={label(project.status)} sub={`Ưu tiên: ${label(project.priority)}`} />
+            <Metric
+              label="Trạng thái"
+              value={label(project.status)}
+              sub={
+                <span className="inline-flex items-center gap-1.5">
+                  <span>Ưu tiên:</span>
+                  <PriorityBadge priority={project.priority} size="xs" />
+                </span>
+              }
+            />
             <Metric
               label="Tiến độ"
               value={`${progress}%`}
@@ -172,7 +184,9 @@ export default async function ProjectDetail({
                       <td>
                         <span className="badge">{label(t.status)}</span>
                       </td>
-                      <td>{label(t.priority)}</td>
+                      <td>
+                        <PriorityBadge priority={t.priority} />
+                      </td>
                       <td>{dateVN(t.due_date)}</td>
                       <td>
                         <Link className="btn !px-2 !py-1 text-xs" href={`/app/tasks?edit=${t.id}`}>

@@ -16,12 +16,14 @@ export default async function Accounts({
   searchParams: Promise<{ edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadAccountsWorkspace();
+  const isDatabase = q.mode === 'database';
+  const [d, dbData] = await Promise.all([
+    loadAccountsWorkspace(),
+    isDatabase ? loadDatabase('accounts') : Promise.resolve(null),
+  ]);
   const edit = d.accounts.find(a => a.id === q.edit);
   const show = !!q.new || !!edit;
   const balances = new Map(d.balances.map(b => [b.account_id, b.balance]));
-  const isDatabase = q.mode === 'database';
-  const dbData = isDatabase ? await loadDatabase('accounts') : null;
 
   return (
     <>

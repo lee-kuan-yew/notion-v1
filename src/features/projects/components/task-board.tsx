@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 import type { Task,TaskStatus } from '@/types/database';
 import { reorderTasks } from '@/features/workspace/actions';
 import { dateVN,label } from '@/components/shared/format';
+import { PriorityBadge } from '@/components/shared/priority';
 const columns:Exclude<TaskStatus,'cancelled'>[]=['backlog','todo','in_progress','review','done'];
 function Card({task}:{task:Task}) {
  const {attributes,listeners,setNodeRef,transform,transition,isDragging}=useSortable({id:task.id});
- return <div ref={setNodeRef} style={{transform:CSS.Transform.toString(transform),transition,opacity:isDragging?.5:1}} className="card mb-2 p-3 shadow-sm"><div className="flex items-start gap-2"><button {...attributes} {...listeners} className="cursor-grab text-muted" aria-label={`Kéo ${task.title}`}>⋮⋮</button><div className="min-w-0 flex-1"><p className="font-medium">{task.title}</p><p className="meta mt-1">{dateVN(task.due_date)} · {label(task.priority)}</p></div><Link className="text-xs text-muted underline" href={`/app/tasks?edit=${task.id}`}>Sửa</Link></div></div>;
+ return <div ref={setNodeRef} style={{transform:CSS.Transform.toString(transform),transition,opacity:isDragging?.5:1}} className="card mb-2 p-3 shadow-sm"><div className="flex items-start gap-2"><button {...attributes} {...listeners} className="cursor-grab text-muted" aria-label={`Kéo ${task.title}`}>⋮⋮</button><div className="min-w-0 flex-1"><p className="font-medium">{task.title}</p><div className="meta mt-1.5 flex flex-wrap items-center gap-1.5"><span>{dateVN(task.due_date)}</span><PriorityBadge priority={task.priority} size="xs" /></div></div><Link className="text-xs text-muted underline" href={`/app/tasks?edit=${task.id}`}>Sửa</Link></div></div>;
 }
 function Column({status,tasks}:{status:Exclude<TaskStatus,'cancelled'>;tasks:Task[]}) {
  const {setNodeRef,isOver}=useDroppable({id:`col:${status}`});

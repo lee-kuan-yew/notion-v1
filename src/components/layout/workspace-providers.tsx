@@ -1,11 +1,11 @@
 'use client';
 
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Toaster } from 'sonner';
 
 export function WorkspaceProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider defaultTheme="system">
       <Toaster richColors position="top-right" />
       {children}
     </ThemeProvider>

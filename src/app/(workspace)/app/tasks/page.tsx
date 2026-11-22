@@ -7,6 +7,7 @@ import { TaskBoard } from '@/features/projects/components/task-board';
 import { money, overdue } from '@/lib/finance';
 import { dateVN, label } from '@/components/shared/format';
 import { PageHeader, Notice, Empty } from '@/components/shared/primitives';
+import { PriorityBadge } from '@/components/shared/priority';
 import { DeleteForm } from '@/components/shared/delete-form';
 import { SelectDropdown } from '@/components/ui/dropdown';
 
@@ -29,11 +30,13 @@ export default async function Tasks({
   }>;
 }) {
   const q = await searchParams;
-  const d = await loadTasksWorkspace();
+  const isDatabase = q.view === 'database';
+  const [d, dbData] = await Promise.all([
+    loadTasksWorkspace(),
+    isDatabase ? loadDatabase('tasks') : Promise.resolve(null),
+  ]);
   const edit = d.tasks.find(t => t.id === q.edit);
   const projectNames = new Map(d.projects.map(p => [p.id, p.name]));
-  const isDatabase = q.view === 'database';
-  const dbData = isDatabase ? await loadDatabase('tasks') : null;
   const rows = d.tasks.filter(
     t =>
       (!q.q || `${t.title} ${t.description}`.toLocaleLowerCase('vi').includes(q.q.toLocaleLowerCase('vi'))) &&
@@ -159,7 +162,9 @@ export default async function Tasks({
                       <td>
                         <span className="badge">{label(t.status)}</span>
                       </td>
-                      <td>{label(t.priority)}</td>
+                      <td>
+                        <PriorityBadge priority={t.priority} />
+                      </td>
                       <td>{dateVN(t.start_date)}</td>
                       <td>{dateVN(t.due_date)}</td>
                       <td>{t.estimated_cost === null ? '—' : money(t.estimated_cost)}</td>

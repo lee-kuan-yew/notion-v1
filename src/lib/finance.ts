@@ -1,4 +1,7 @@
 import type { Task } from '@/types/database';
+
+const vndFormatter = new Intl.NumberFormat('vi-VN');
+
 export function cents(value: string | number | null | undefined): bigint {
   const input = String(value ?? '0');
   const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(input);
@@ -11,7 +14,7 @@ export function money(value: string | number | bigint | null | undefined) {
   const abs = amount < 0n ? -amount : amount;
   const whole = abs / 100n;
   const fraction = abs % 100n;
-  return `${sign}${new Intl.NumberFormat('vi-VN').format(whole)}${fraction ? `,${fraction.toString().padStart(2,'0')}` : ''} ₫`;
+  return `${sign}${vndFormatter.format(whole)}${fraction ? `,${fraction.toString().padStart(2,'0')}` : ''} ₫`;
 }
 export function monthBounds(value: string) {
   if (!/^\d{4}-\d{2}$/.test(value)) throw new Error('Invalid month');

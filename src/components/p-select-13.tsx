@@ -5,6 +5,9 @@ export type TimezoneSelectProps = {
   className?: string;
 };
 
+type ZoneMeta = { timezone: string; label: string; minutes: number };
+let cachedZones: ZoneMeta[] | null = null;
+
 function zoneOffset(timezone: string) {
   const formatter = new Intl.DateTimeFormat('en', {
     timeZone: timezone,
@@ -19,21 +22,31 @@ function zoneOffset(timezone: string) {
   };
 }
 
+function getZones(): ZoneMeta[] {
+  if (cachedZones) return cachedZones;
+  const seen = new Set<string>();
+  const list: ZoneMeta[] = [];
+  for (const raw of Intl.supportedValuesOf('timeZone')) {
+    const timezone = raw === 'Asia/Saigon' ? 'Asia/Ho_Chi_Minh' : raw;
+    if (seen.has(timezone)) continue;
+    seen.add(timezone);
+    list.push({ timezone, ...zoneOffset(timezone) });
+  }
+  list.sort((a, b) => a.minutes - b.minutes || a.timezone.localeCompare(b.timezone));
+  cachedZones = list;
+  return list;
+}
+
 export default function TimezoneSelect({
   id,
   name,
   defaultValue = 'Asia/Ho_Chi_Minh',
   className,
 }: TimezoneSelectProps) {
-  const zones = Intl.supportedValuesOf('timeZone')
-    .map(timezone => (timezone === 'Asia/Saigon' ? 'Asia/Ho_Chi_Minh' : timezone))
-    .filter((timezone, index, all) => all.indexOf(timezone) === index)
-    .map(timezone => ({ timezone, ...zoneOffset(timezone) }))
-    .sort((a, b) => a.minutes - b.minutes || a.timezone.localeCompare(b.timezone));
-
-  if (!zones.some(zone => zone.timezone === defaultValue)) {
-    zones.push({ timezone: defaultValue, ...zoneOffset(defaultValue) });
-  }
+  const baseZones = getZones();
+  const zones = baseZones.some(zone => zone.timezone === defaultValue)
+    ? baseZones
+    : [...baseZones, { timezone: defaultValue, ...zoneOffset(defaultValue) }];
 
   return (
     <select

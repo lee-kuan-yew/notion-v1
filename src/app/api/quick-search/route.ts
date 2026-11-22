@@ -41,10 +41,10 @@ export async function GET(request: Request) {
     }
 
     const [pagesResult, projectsResult, tasksResult, transactionsResult] = await Promise.all([
-      supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false }),
-      supabase.from('projects').select('id,name,status,priority').order('updated_at', { ascending: false }),
-      supabase.from('tasks').select('id,title,status,priority').order('created_at', { ascending: false }),
-      supabase.from('transactions').select('id,description,payee,type,transaction_date,amount').order('transaction_date', { ascending: false }),
+      supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false }).limit(80),
+      supabase.from('projects').select('id,name,status,priority').order('updated_at', { ascending: false }).limit(80),
+      supabase.from('tasks').select('id,title,status,priority').order('created_at', { ascending: false }).limit(80),
+      supabase.from('transactions').select('id,description,payee,type,transaction_date,amount').order('transaction_date', { ascending: false }).limit(80),
     ]);
 
     const items: QuickSearchItem[] = [];

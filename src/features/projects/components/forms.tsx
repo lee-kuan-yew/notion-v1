@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Project, Task, Milestone } from '@/types/database';
 import { saveProject, saveTask, saveMilestone } from '@/features/workspace/actions';
 import { Field, FormPanel } from '@/components/shared/primitives';
+import { PriorityPicker } from '@/components/shared/priority';
 import { label } from '@/components/shared/format';
 import { SelectDropdown } from '@/components/ui/dropdown';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -23,11 +24,11 @@ export function ProjectForm({ project }: { project?: Project }) {
           />
         </Field>
         <Field label="Ưu tiên" name="priority">
-          <SelectDropdown
+          <PriorityPicker
+            key={project?.id ?? 'new'}
             id="priority"
             name="priority"
             defaultValue={project?.priority ?? 'medium'}
-            options={['low', 'medium', 'high', 'urgent'].map(v => ({ value: v, label: label(v) }))}
           />
         </Field>
         <Field label="Ngân sách" name="budget_amount">
@@ -85,11 +86,11 @@ export function TaskForm({ task, projects, defaultProjectId }: { task?: Task; pr
           />
         </Field>
         <Field label="Ưu tiên" name="priority">
-          <SelectDropdown
+          <PriorityPicker
+            key={task?.id ?? 'new'}
             id="priority"
             name="priority"
             defaultValue={task?.priority ?? 'medium'}
-            options={['low', 'medium', 'high', 'urgent'].map(v => ({ value: v, label: label(v) }))}
           />
         </Field>
         <Field label="Bắt đầu" name="start_date">

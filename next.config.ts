@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
-  /* config options here */
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
   turbopack: {
     root: process.cwd(),
     rules: {

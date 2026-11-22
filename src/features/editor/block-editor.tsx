@@ -12,7 +12,7 @@ import {
 } from '@blocknote/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/layout/theme-provider';
 import { toast } from 'sonner';
 import { createPage } from '@/features/database/actions';
 import { databaseConfig, databaseKeys } from '@/features/database/config';
@@ -284,7 +284,10 @@ export function BlockEditor({
       saving.current = pending;
       await pending;
       saving.current = null;
-      if (failed) break;
+      if (failed) {
+        timer.current = setTimeout(() => void flush(), 2000);
+        break;
+      }
     }
   }, [onSave]);
 
@@ -587,10 +590,13 @@ export function BlockEditor({
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span role="status">{status === 'saving' ? 'Đang lưu…' : status === 'error' ? 'Lỗi lưu' : 'Đã lưu'}</span>
-          <button type="button" className="underline" onClick={() => void flush()}>
-            Lưu ngay
-          </button>
+          <span role="status">
+            {status === 'saving'
+              ? 'Đang tự động lưu…'
+              : status === 'error'
+                ? 'Lỗi lưu — đang thử lại…'
+                : 'Đã tự động lưu'}
+          </span>
         </div>
       </div>
 

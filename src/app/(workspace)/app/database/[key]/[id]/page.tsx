@@ -12,16 +12,18 @@ export default async function RecordPage({ params }: { params: Promise<{ key: st
   const { key, id } = await params;
   if (!(key in databaseConfig)) notFound();
   const databaseKey = key as DatabaseKey;
-  const data = await loadDatabase(databaseKey);
+  const { supabase, user } = await requireOwner();
+  const [data, document] = await Promise.all([
+    loadDatabase(databaseKey),
+    supabase
+      .from('record_documents')
+      .select('*')
+      .eq('database_key', databaseKey)
+      .eq('record_id', id)
+      .eq('user_id', user.id),
+  ]);
   const row = data.rows.find(item => item.id === id) as DataRow | undefined;
   if (!row) notFound();
-  const { supabase, user } = await requireOwner();
-  const document = await supabase
-    .from('record_documents')
-    .select('*')
-    .eq('database_key', databaseKey)
-    .eq('record_id', id)
-    .eq('user_id', user.id);
   if (document.error) throw new Error(document.error.message);
   return (
     <DocumentPage

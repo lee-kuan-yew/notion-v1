@@ -321,9 +321,20 @@ function evalNode(node: Node, row: DataRow): FormulaValue {
   }
 }
 
-export function validateFormula(expression: string, allowedKeys: Iterable<string>): { refs: string[] } {
+const astCache = new Map<string, { ast: Node; refs: Set<string> }>();
+
+function compileFormula(expression: string): { ast: Node; refs: Set<string> } {
+  const cached = astCache.get(expression);
+  if (cached) return cached;
   const tokens = tokenize(expression);
-  const { refs } = parseExpression(tokens);
+  const parsed = parseExpression(tokens);
+  if (astCache.size > 200) astCache.clear();
+  astCache.set(expression, parsed);
+  return parsed;
+}
+
+export function validateFormula(expression: string, allowedKeys: Iterable<string>): { refs: string[] } {
+  const { refs } = compileFormula(expression);
   const allowed = new Set(allowedKeys);
   for (const key of refs) {
     if (!allowed.has(key)) {
@@ -335,8 +346,7 @@ export function validateFormula(expression: string, allowedKeys: Iterable<string
 
 export function evaluateFormula(expression: string, row: DataRow): FormulaValue {
   try {
-    const tokens = tokenize(expression);
-    const { ast } = parseExpression(tokens);
+    const { ast } = compileFormula(expression);
     return evalNode(ast, row);
   } catch {
     return null;

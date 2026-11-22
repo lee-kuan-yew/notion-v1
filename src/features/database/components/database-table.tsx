@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table';
 import { GripVertical, MoreHorizontal, ChevronDown, ExternalLink, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { money } from '@/lib/finance';
@@ -22,8 +21,6 @@ import { saveDatabaseProperty, deleteDatabaseProperty, savePropertyOption, saveT
 import { SelectDropdown } from '@/components/ui/dropdown';
 import { MoneyInput } from '@/components/ui/money-input';
 import type { DatabaseKey, DatabaseProperty, PropertyOption, TagOption, PropertyType, StatusGroup } from '@/types/database';
-
-const features = tableFeatures({});
 
 export const typeLabels: Record<PropertyType, string> = {
   title: 'Tiêu đề',
@@ -1393,50 +1390,11 @@ export function DatabaseTable({
     return result;
   }, [rows, groupBy, groupProperty, databaseKey]);
 
-  const columns = useMemo<ColumnDef<typeof features, DataRow>[]>(
-    () => [
-      { id: 'select', header: '', cell: () => null },
-      ...properties.map(property => ({
-        id: property.property_key,
-        accessorFn: (row: DataRow) => propertyValue(row, property.property_key),
-        header: property.property_name,
-        cell: ({ row }: { row: { original: DataRow } }) => (
-          <DatabaseCell
-            databaseKey={databaseKey}
-            row={row.original}
-            property={property}
-            options={options}
-            tags={tags}
-            lookups={lookups}
-            wrap={wrap}
-            onChange={onChange}
-            onTag={onTag}
-            onOptionCreated={onOptionCreated}
-            onTagCreated={onTagCreated}
-            onOpen={onOpen}
-            onOpenFullPage={onOpenFullPage}
-            onAdvance={direction => {
-              const td = tableRef.current?.querySelector<HTMLElement>(
-                `tbody td[data-row="${row.original.id}"][data-prop="${property.property_key}"]`
-              );
-              if (td) moveFocusFromCell(td, direction, true);
-            }}
-          />
-        ),
-      })),
-      { id: 'actions', header: '', cell: () => null },
-    ],
-    [properties, databaseKey, options, tags, lookups, wrap, onChange, onTag, onOptionCreated, onTagCreated, onOpen, onOpenFullPage]
-  );
-
-  const table = useTable({ data: orderedRows, columns, features, getRowId: row => row.id });
-  const tableRows = table.getRowModel().rows;
-
   const groupMetaByIndex = useMemo(() => {
     if (!groupBy) return new Map<number, { label: string; color?: string; count: number }>();
     const counts = new Map<string, number>();
-    const keys = tableRows.map(r => {
-      const val = propertyValue(r.original, groupBy);
+    const keys = orderedRows.map(r => {
+      const val = propertyValue(r, groupBy);
       const k = val == null || val === '' ? '__empty__' : String(val);
       counts.set(k, (counts.get(k) ?? 0) + 1);
       return k;
@@ -1460,7 +1418,7 @@ export function DatabaseTable({
       }
     });
     return map;
-  }, [groupBy, tableRows, groupProperty, lookups, databaseKey, options]);
+  }, [groupBy, orderedRows, groupProperty, lookups, databaseKey, options]);
 
   return (
     <div className="table-wrap max-h-[70vh] overflow-auto">
@@ -1492,13 +1450,12 @@ export function DatabaseTable({
           </tr>
         </thead>
         <tbody>
-          {tableRows.map((row, rowIndex) => {
+          {orderedRows.map((row, rowIndex) => {
             const groupHeader = groupMetaByIndex.get(rowIndex) ?? null;
-            const cells = row.getAllCells().slice(1, -1);
             return (
               <FragmentRow key={row.id} group={groupHeader} colSpan={properties.length + 2}>
                 <DatabaseRow
-                  row={row.original}
+                  row={row}
                   selected={selected.has(row.id)}
                   onSelect={shift => onSelect(row.id, shift)}
                   onOpen={() => onOpen(row.id)}
@@ -1507,13 +1464,12 @@ export function DatabaseTable({
                   onDelete={() => onDelete(row.id)}
                   onDragRow={onMoveRow}
                 >
-                  {cells.map((cell, index) => {
-                    const prop = properties[index];
-                    const editable = isPropertyEditable(databaseKey, prop, row.original);
+                  {properties.map((prop, index) => {
+                    const editable = isPropertyEditable(databaseKey, prop, row);
                     const cellWidth = widths[prop.property_key] ?? 180;
                     return (
                       <td
-                        key={cell.id}
+                        key={prop.id}
                         data-row={row.id}
                         data-col={index}
                         data-prop={prop.property_key}
@@ -1563,7 +1519,27 @@ export function DatabaseTable({
                           }
                         }}
                       >
-                        <table.FlexRender cell={cell} />
+                        <DatabaseCell
+                          databaseKey={databaseKey}
+                          row={row}
+                          property={prop}
+                          options={options}
+                          tags={tags}
+                          lookups={lookups}
+                          wrap={wrap}
+                          onChange={onChange}
+                          onTag={onTag}
+                          onOptionCreated={onOptionCreated}
+                          onTagCreated={onTagCreated}
+                          onOpen={onOpen}
+                          onOpenFullPage={onOpenFullPage}
+                          onAdvance={direction => {
+                            const td = tableRef.current?.querySelector<HTMLElement>(
+                              `tbody td[data-row="${row.id}"][data-prop="${prop.property_key}"]`
+                            );
+                            if (td) moveFocusFromCell(td, direction, true);
+                          }}
+                        />
                       </td>
                     );
                   })}

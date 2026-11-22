@@ -15,7 +15,11 @@ export default async function Budgets({
   searchParams: Promise<{ month?: string; edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadBudgetsWorkspace(q.month);
+  const isDatabase = q.mode === 'database';
+  const [d, dbData] = await Promise.all([
+    loadBudgetsWorkspace(q.month),
+    isDatabase ? loadDatabase('budgets') : Promise.resolve(null),
+  ]);
   const edit = d.budgets.find(b => b.id === q.edit);
   const show = !!q.new || !!edit;
   const actuals = new Map(d.actuals.map(a => [a.budget_id, a.spent]));
@@ -23,8 +27,6 @@ export default async function Budgets({
   const filtered = d.budgets.filter(b => b.month_start === d.month);
   const total = cents(d.budgetTotals.budget);
   const spent = cents(d.budgetTotals.spent);
-  const isDatabase = q.mode === 'database';
-  const dbData = isDatabase ? await loadDatabase('budgets') : null;
 
   return (
     <>

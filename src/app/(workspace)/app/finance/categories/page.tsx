@@ -15,12 +15,14 @@ export default async function Categories({
   searchParams: Promise<{ edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadCategoriesWorkspace();
+  const isDatabase = q.mode === 'database';
+  const [d, dbData] = await Promise.all([
+    loadCategoriesWorkspace(),
+    isDatabase ? loadDatabase('categories') : Promise.resolve(null),
+  ]);
   const edit = d.categories.find(c => c.id === q.edit);
   const show = !!q.new || !!edit;
   const names = new Map(d.categories.map(c => [c.id, c.name]));
-  const isDatabase = q.mode === 'database';
-  const dbData = isDatabase ? await loadDatabase('categories') : null;
 
   return (
     <>

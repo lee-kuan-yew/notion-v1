@@ -7,6 +7,7 @@ import { ProjectForm } from '@/features/projects/components/forms';
 import { money, cents, projectProgress } from '@/lib/finance';
 import { dateVN, label } from '@/components/shared/format';
 import { PageHeader, Notice, Empty, Progress } from '@/components/shared/primitives';
+import { PriorityBadge } from '@/components/shared/priority';
 import { DeleteForm } from '@/components/shared/delete-form';
 import { SelectDropdown } from '@/components/ui/dropdown';
 
@@ -16,12 +17,14 @@ export default async function Projects({
   searchParams: Promise<{ new?: string; edit?: string; mode?: string; error?: string; saved?: string; status?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadProjectsWorkspace();
+  const isDatabase = q.mode === 'database';
+  const [d, dbData] = await Promise.all([
+    loadProjectsWorkspace(),
+    isDatabase ? loadDatabase('projects') : Promise.resolve(null),
+  ]);
   const edit = d.projects.find(p => p.id === q.edit);
   const spending = new Map(d.spending.map(p => [p.project_id, p.spent]));
   const projects = q.status ? d.projects.filter(p => p.status === q.status) : d.projects;
-  const isDatabase = q.mode === 'database';
-  const dbData = isDatabase ? await loadDatabase('projects') : null;
 
   return (
     <>
@@ -103,7 +106,9 @@ export default async function Projects({
                       </div>
                       <div>
                         <p className="meta">Ưu tiên</p>
-                        <p>{label(p.priority)}</p>
+                        <div className="mt-1">
+                          <PriorityBadge priority={p.priority} />
+                        </div>
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">

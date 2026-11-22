@@ -4,7 +4,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/layout/theme-provider';
 import { toast } from 'sonner';
 import {
   LayoutDashboard,

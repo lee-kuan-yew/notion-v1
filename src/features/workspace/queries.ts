@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { requireOwner } from '@/lib/auth/owner';
 import { monthBounds } from '@/lib/finance';
 
@@ -119,7 +120,7 @@ export async function loadProjectDetailWorkspace() {
   };
 }
 
-export async function loadDatabaseWorkspace() {
+export const loadDatabaseWorkspace = cache(async function loadDatabaseWorkspace() {
   const { supabase, today } = await workspaceContext();
   const month = `${today.slice(0, 7)}-01`;
   const [accounts, categories, transactions, budgets, projects, tasks, milestones, balances, spending, actuals] = await Promise.all([
@@ -147,7 +148,7 @@ export async function loadDatabaseWorkspace() {
     spending: unwrap(spending, 'project spending'),
     actuals: unwrap(actuals, 'budget actuals'),
   };
-}
+});
 
 export async function loadAccountsWorkspace() {
   const { supabase, today } = await workspaceContext();

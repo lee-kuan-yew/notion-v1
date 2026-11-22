@@ -12,10 +12,12 @@ type Query = TransactionFilters & { edit?: string; new?: string; page?: string; 
 
 export default async function Transactions({ searchParams }: { searchParams: Promise<Query> }) {
   const q = await searchParams;
-  const d = await loadTransactionsWorkspace();
-  const edit = d.transactions.find(t => t.id === q.edit);
   const isDatabase = q.mode === 'database';
-  const dbData = isDatabase ? await loadDatabase('transactions') : null;
+  const [d, dbData] = await Promise.all([
+    loadTransactionsWorkspace(),
+    isDatabase ? loadDatabase('transactions') : Promise.resolve(null),
+  ]);
+  const edit = d.transactions.find(t => t.id === q.edit);
 
   const rows = filterTransactions(d.transactions, q);
   const page = Math.max(1, Number.parseInt(q.page ?? '1') || 1);
