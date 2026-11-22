@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isLocalMode } from '@/lib/local/mode';
 import { loginUsername, ownerLoginEmail } from '@/lib/auth/login-config';
+import { clearTimezone, writeTimezone } from '@/lib/auth/timezone';
 export async function signIn(form: FormData) {
   if (isLocalMode()) redirect('/app');
   const username=String(form.get('username')??'').trim();
@@ -16,11 +17,19 @@ export async function signIn(form: FormData) {
     await supabase.auth.signOut();
     redirect('/login?error=This+account+is+not+the+configured+owner');
   }
+  const initialized = await supabase.rpc('initialize_owner');
+  if (initialized.error) {
+    await supabase.auth.signOut();
+    redirect('/login?error=Không+thể+khởi+tạo+workspace');
+  }
+  const profile = await supabase.from('profiles').select('timezone').eq('id', data.user.id).single();
+  await writeTimezone(profile.data?.timezone || 'Asia/Ho_Chi_Minh');
   redirect('/app');
 }
 export async function signOut() {
   if (isLocalMode()) redirect('/app');
   const supabase=await createClient();
   await supabase.auth.signOut();
+  await clearTimezone();
   redirect('/login');
 }

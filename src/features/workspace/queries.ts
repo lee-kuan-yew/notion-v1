@@ -34,11 +34,119 @@ function unwrap<T>(result: { data: T | null; error: { message: string } | null }
 }
 
 async function workspaceContext() {
-  const { supabase, user } = await requireOwner();
-  const initialized = await supabase.rpc('initialize_owner');
-  if (initialized.error) throw new Error(`Initialize owner: ${initialized.error.message}`);
-  const profile = await supabase.from('profiles').select('timezone').eq('id', user.id).single();
-  return { supabase, today: todayInVietnam(profile.data?.timezone || 'Asia/Ho_Chi_Minh') };
+  const { readTimezone } = await import('@/lib/auth/timezone');
+  const [{ supabase }, timezone] = await Promise.all([requireOwner(), readTimezone()]);
+  return { supabase, today: todayInVietnam(timezone) };
+}
+
+async function loadReportRows(
+  supabase: Awaited<ReturnType<typeof requireOwner>>['supabase'],
+  start: string,
+  end: string,
+  month: string
+) {
+  const [categories, budgets, projects, periodSpending, actuals, totals, monthly, expenseCategories] = await Promise.all([
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('budgets').select('*').eq('month_start', month).order('month_start', { ascending: false }),
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.rpc('project_spending_period', { p_start: start, p_end: end }),
+    supabase.rpc('budget_actuals', { p_month: month }),
+    supabase.rpc('period_totals', { p_start: start, p_end: end }),
+    supabase.rpc('monthly_report', { p_start: start, p_end: end }),
+    supabase.rpc('expense_categories', { p_start: start, p_end: end }),
+  ]);
+  return {
+    start,
+    end,
+    month,
+    categories: unwrap(categories, 'categories'),
+    budgets: unwrap(budgets, 'budgets'),
+    projects: unwrap(projects, 'projects'),
+    periodSpending: unwrap(periodSpending, 'period project spending'),
+    actuals: unwrap(actuals, 'budget actuals'),
+    totals: unwrap(totals, 'period totals')[0] ?? { income: '0', expense: '0' },
+    monthly: unwrap(monthly, 'monthly report'),
+    expenseCategories: unwrap(expenseCategories, 'expense categories'),
+  };
+}
+
+export async function loadReportWorkspace(period?: string, custom?: { from?: string; to?: string }) {
+  const { supabase, today } = await workspaceContext();
+  const { start, end } = periodBounds(period, today, custom);
+  const month = `${today.slice(0, 7)}-01`;
+  return { today, ...(await loadReportRows(supabase, start, end, month)) };
+}
+
+export async function loadFinanceOverviewWorkspace(period?: string, custom?: { from?: string; to?: string }) {
+  const { supabase, today } = await workspaceContext();
+  const { start, end } = periodBounds(period, today, custom);
+  const month = `${today.slice(0, 7)}-01`;
+  const [report, balances, budgetTotals, transactions] = await Promise.all([
+    loadReportRows(supabase, start, end, month),
+    supabase.rpc('account_balances'),
+    supabase.rpc('budget_month_totals', { p_month: month }),
+    supabase.from('transactions').select('*').gte('transaction_date', start).lt('transaction_date', end).order('transaction_date', { ascending: false }).order('created_at', { ascending: false }).limit(8),
+  ]);
+  return {
+    today,
+    ...report,
+    balances: unwrap(balances, 'account balances'),
+    budgetTotals: unwrap(budgetTotals, 'budget month totals')[0] ?? { budget: '0', spent: '0' },
+    transactions: unwrap(transactions, 'transactions'),
+  };
+}
+
+export async function loadProjectDetailWorkspace() {
+  const { supabase, today } = await workspaceContext();
+  const [accounts, categories, transactions, projects, tasks, milestones, spending] = await Promise.all([
+    supabase.from('accounts').select('*').order('name'),
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('transactions').select('*').order('transaction_date', { ascending: false }).order('created_at', { ascending: false }),
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.from('tasks').select('*').order('position').order('created_at'),
+    supabase.from('milestones').select('*').order('position'),
+    supabase.rpc('project_spending'),
+  ]);
+  return {
+    today,
+    accounts: unwrap(accounts, 'accounts'),
+    categories: unwrap(categories, 'categories'),
+    transactions: unwrap(transactions, 'transactions'),
+    projects: unwrap(projects, 'projects'),
+    tasks: unwrap(tasks, 'tasks'),
+    milestones: unwrap(milestones, 'milestones'),
+    spending: unwrap(spending, 'project spending'),
+  };
+}
+
+export async function loadDatabaseWorkspace() {
+  const { supabase, today } = await workspaceContext();
+  const month = `${today.slice(0, 7)}-01`;
+  const [accounts, categories, transactions, budgets, projects, tasks, milestones, balances, spending, actuals] = await Promise.all([
+    supabase.from('accounts').select('*').order('name'),
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('transactions').select('*').order('transaction_date', { ascending: false }).order('created_at', { ascending: false }),
+    supabase.from('budgets').select('*').order('month_start', { ascending: false }),
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.from('tasks').select('*').order('position').order('created_at'),
+    supabase.from('milestones').select('*').order('position'),
+    supabase.rpc('account_balances'),
+    supabase.rpc('project_spending'),
+    supabase.rpc('budget_actuals', { p_month: month }),
+  ]);
+  return {
+    month,
+    accounts: unwrap(accounts, 'accounts'),
+    categories: unwrap(categories, 'categories'),
+    transactions: unwrap(transactions, 'transactions'),
+    budgets: unwrap(budgets, 'budgets'),
+    projects: unwrap(projects, 'projects'),
+    tasks: unwrap(tasks, 'tasks'),
+    milestones: unwrap(milestones, 'milestones'),
+    balances: unwrap(balances, 'account balances'),
+    spending: unwrap(spending, 'project spending'),
+    actuals: unwrap(actuals, 'budget actuals'),
+  };
 }
 
 export async function loadAccountsWorkspace() {
@@ -114,24 +222,23 @@ export async function loadWorkspace(period?: string, budgetMonth?: string, custo
   const { supabase, today } = await workspaceContext();
   const { start, end } = periodBounds(period,today,custom);
   const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(budgetMonth ?? '') ? `${budgetMonth}-01` : `${today.slice(0,7)}-01`;
-  const [accounts,categories,transactions,budgets,projects,tasks,milestones,balances,spending,periodSpending,actuals,budgetTotals,totals,monthly,expenseCategories] = await Promise.all([
-    supabase.from('accounts').select('*').order('name'),
+  const [categories,transactions,budgets,projects,tasks,milestones,balances,spending,periodSpending,actuals,totals,monthly,expenseCategories] = await Promise.all([
     supabase.from('categories').select('*').order('name'),
-    supabase.from('transactions').select('*').order('transaction_date',{ascending:false}).order('created_at',{ascending:false}),
-    supabase.from('budgets').select('*').order('month_start',{ascending:false}),
+    supabase.from('transactions').select('*').order('transaction_date',{ascending:false}).order('created_at',{ascending:false}).limit(5),
+    supabase.from('budgets').select('*').eq('month_start',month).order('month_start',{ascending:false}),
     supabase.from('projects').select('*').order('updated_at',{ascending:false}),
     supabase.from('tasks').select('*').order('position').order('created_at'),
-    supabase.from('milestones').select('*').order('position'),
-    supabase.rpc('account_balances'), supabase.rpc('project_spending'), supabase.rpc('project_spending_period',{p_start:start,p_end:end}), supabase.rpc('budget_actuals',{p_month:month}), supabase.rpc('budget_month_totals',{p_month:month}),
+    supabase.from('milestones').select('*').gte('due_date',today).order('position'),
+    supabase.rpc('account_balances'), supabase.rpc('project_spending'), supabase.rpc('project_spending_period',{p_start:start,p_end:end}), supabase.rpc('budget_actuals',{p_month:month}),
     supabase.rpc('period_totals',{p_start:start,p_end:end}),
     supabase.rpc('monthly_report',{p_start:start,p_end:end}),
     supabase.rpc('expense_categories',{p_start:start,p_end:end}),
   ]);
   return {
     today,start,end,month,
-    accounts:unwrap(accounts,'accounts'), categories:unwrap(categories,'categories'), transactions:unwrap(transactions,'transactions'),
+    categories:unwrap(categories,'categories'), transactions:unwrap(transactions,'transactions'),
     budgets:unwrap(budgets,'budgets'), projects:unwrap(projects,'projects'), tasks:unwrap(tasks,'tasks'), milestones:unwrap(milestones,'milestones'),
-    balances:unwrap(balances,'account balances'), spending:unwrap(spending,'project spending'), periodSpending:unwrap(periodSpending,'period project spending'), actuals:unwrap(actuals,'budget actuals'), budgetTotals:unwrap(budgetTotals,'budget month totals')[0]??{budget:'0',spent:'0'},
+    balances:unwrap(balances,'account balances'), spending:unwrap(spending,'project spending'), periodSpending:unwrap(periodSpending,'period project spending'), actuals:unwrap(actuals,'budget actuals'),
     totals:unwrap(totals,'period totals')[0] ?? {income:'0',expense:'0'}, monthly:unwrap(monthly,'monthly report'), expenseCategories:unwrap(expenseCategories,'expense categories'),
   };
 }

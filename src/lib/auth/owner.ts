@@ -12,7 +12,9 @@ export const requireOwner = cache(async function requireOwner() {
   const ownerId = process.env.PERSONAL_OS_OWNER_USER_ID;
   if (!ownerId || !process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL || !process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY) redirect('/login');
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user || user.id !== ownerId) redirect('/login');
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims || claims.sub !== ownerId) redirect('/login');
+  const user = { id: claims.sub, email: typeof claims.email === 'string' ? claims.email : undefined };
   return { supabase, user };
 });

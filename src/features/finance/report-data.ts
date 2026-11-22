@@ -1,5 +1,6 @@
 import type { WorkspaceData } from '@/features/workspace/queries';
-export function reportData(d:WorkspaceData) {
+type ReportSource = Pick<WorkspaceData, 'categories' | 'projects' | 'monthly' | 'expenseCategories' | 'actuals' | 'budgets' | 'month' | 'periodSpending'>;
+export function reportData(d:ReportSource) {
  const categoryNames=new Map(d.categories.map(c=>[c.id,c.name]));
  const projectNames=new Map(d.projects.map(p=>[p.id,p.name]));
  const monthly=d.monthly.map(m=>({name:m.month_start.slice(0,7),income:Number(m.income),expense:Number(m.expense),cashflow:Number(m.income)-Number(m.expense)}));

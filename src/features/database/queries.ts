@@ -1,6 +1,6 @@
 import 'server-only';
 import { requireOwner } from '@/lib/auth/owner';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadDatabaseWorkspace } from '@/features/workspace/queries';
 import { databaseConfig, tagTable } from './config';
 import { evaluateFormula } from './formula';
 import type { DataRow } from './rules';
@@ -43,7 +43,7 @@ export async function loadDatabase(key: DatabaseKey, scope?: { projectId?: strin
     );
   }
   const [workspace, propertiesResult, viewsResult, optionsResult, tagsResult, linksResult] = await Promise.all([
-    loadWorkspace(),
+    loadDatabaseWorkspace(),
     supabase.from('database_properties').select('*').eq('database_key', key).order('position'),
     supabase.from('database_views').select('*').eq('database_key', key).order('created_at'),
     supabase.from('database_property_options').select('*').order('position'),

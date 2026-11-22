@@ -8,8 +8,6 @@ import TimezoneSelect from '@/components/p-select-13';
 export default async function Settings({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const q = await searchParams;
   const { supabase, user } = await requireOwner();
-  const initialized = await supabase.rpc('initialize_owner');
-  if (initialized.error) throw new Error(`Initialize owner: ${initialized.error.message}`);
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
   return (

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireOwner } from '@/lib/auth/owner';
+import { writeTimezone } from '@/lib/auth/timezone';
 
 function isValidTimezone(tz: string): boolean {
   if (!tz || tz.length > 80) return false;
@@ -28,6 +29,7 @@ export async function saveProfile(form: FormData) {
     .eq('id', user.id)
     .eq('user_id', user.id);
   if (error) redirect(`/app/settings?error=${encodeURIComponent(error.message)}`);
+  await writeTimezone(timezone);
   revalidatePath('/app', 'layout');
   redirect('/app/settings?saved=1');
 }

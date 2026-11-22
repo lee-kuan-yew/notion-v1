@@ -166,7 +166,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
   const nav = (
     <>
       <div className="flex h-14 items-center justify-between px-4">
-        <Link href="/app" className="flex items-center gap-2 font-semibold">
+        <Link href="/app" prefetch={false} className="flex items-center gap-2 font-semibold">
           <span className="flex size-8 items-center justify-center">
             <Image src="/logo.png" alt="" width={28} height={28} className="size-7 dark:invert" priority />
           </span>
@@ -183,6 +183,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
             <Link
               key={href}
               href={href}
+              prefetch={false}
               title={itemLabel}
               onClick={() => setMobile(false)}
               className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] ${
@@ -226,6 +227,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
                     <Link
                       key={href}
                       href={href}
+                      prefetch={false}
                       title={itemLabel}
                       onClick={() => setMobile(false)}
                       className={`mb-0.5 flex items-center gap-2.5 rounded-lg py-1.5 pl-9 pr-3 text-[13px] ${

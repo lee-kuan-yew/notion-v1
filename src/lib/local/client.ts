@@ -39,10 +39,14 @@ function failure(error: unknown): LocalResult {
 }
 
 class LocalQuery {
-  private filters: { column: string; value: unknown }[] = [];
+  private filters: { column: string; value: unknown; operator: '=' | '>=' | '<' }[] = [];
   private orders: { column: string; ascending: boolean }[] = [];
+  private rowLimit: number | null = null;
   constructor(private db: Promise<PGlite>, private table: string, private operation: 'select' | 'update' | 'delete', private payload?: Row, private projection = '*') {}
-  eq(column: string, value: unknown) { this.filters.push({ column: identifier(column), value }); return this; }
+  eq(column: string, value: unknown) { this.filters.push({ column: identifier(column), value, operator: '=' }); return this; }
+  gte(column: string, value: unknown) { this.filters.push({ column: identifier(column), value, operator: '>=' }); return this; }
+  lt(column: string, value: unknown) { this.filters.push({ column: identifier(column), value, operator: '<' }); return this; }
+  limit(count: number) { this.rowLimit = Math.max(0, Math.floor(count)); return this; }
   order(column: string, options?: { ascending?: boolean }) { this.orders.push({ column: identifier(column), ascending: options?.ascending !== false }); return this; }
   single() { return this.run(true); }
   then<TResult1 = LocalResult, TResult2 = never>(onfulfilled?: ((value: LocalResult) => TResult1 | PromiseLike<TResult1>) | null, onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null): Promise<TResult1 | TResult2> {
@@ -52,12 +56,13 @@ class LocalQuery {
     try {
       const db = await this.db;
       const values: unknown[] = [];
-      const where = this.filters.length ? ` where ${this.filters.map(item => { values.push(item.value); return `${item.column} = $${values.length}`; }).join(' and ')}` : '';
+      const where = this.filters.length ? ` where ${this.filters.map(item => { values.push(item.value); return `${item.column} ${item.operator} $${values.length}`; }).join(' and ')}` : '';
       let sql: string;
       if (this.operation === 'select') {
         const fields = this.projection === '*' ? '*' : this.projection.split(',').map(item => identifier(item.trim())).join(',');
         const order = this.orders.length ? ` order by ${this.orders.map(item => `${item.column} ${item.ascending ? 'asc' : 'desc'}`).join(',')}` : '';
-        sql = `select ${fields} from public.${this.table}${where}${order}`;
+        const limit = this.rowLimit === null ? '' : ` limit ${this.rowLimit}`;
+        sql = `select ${fields} from public.${this.table}${where}${order}${limit}`;
       } else {
         if (!this.filters.length) throw new Error('A local mutation requires an ownership filter');
         if (this.operation === 'delete') sql = `delete from public.${this.table}${where}`;

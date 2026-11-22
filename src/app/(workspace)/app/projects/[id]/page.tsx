@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadProjectDetailWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { ProjectForm, MilestoneForm } from '@/features/projects/components/forms';
@@ -18,7 +18,7 @@ export default async function ProjectDetail({
 }) {
   const { id } = await params;
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadProjectDetailWorkspace();
   const project = d.projects.find(p => p.id === id);
   if (!project) notFound();
   const projectTasks = d.tasks.filter(t => t.project_id === id);
