@@ -15,9 +15,10 @@ export function QuickSearchModal({ open, onClose }: { open: boolean; onClose: ()
   useEffect(() => {
     if (!open) return;
     let active = true;
+    const controller = new AbortController();
     const handle = setTimeout(() => {
       setLoading(true);
-      fetch(`/api/quick-search?q=${encodeURIComponent(query)}`, { cache: 'no-store' })
+      fetch(`/api/quick-search?q=${encodeURIComponent(query)}`, { cache: 'no-store', signal: controller.signal })
         .then(res => (res.ok ? res.json() : { items: [] }))
         .then((data: { items?: QuickSearchItem[] }) => {
           if (!active) return;
@@ -33,6 +34,7 @@ export function QuickSearchModal({ open, onClose }: { open: boolean; onClose: ()
     }, 120);
     return () => {
       active = false;
+      controller.abort();
       clearTimeout(handle);
     };
   }, [open, query]);

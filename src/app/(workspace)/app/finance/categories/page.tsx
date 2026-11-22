@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadCategoriesWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { saveCategory, archiveRecord } from '@/features/workspace/actions';
@@ -15,7 +15,7 @@ export default async function Categories({
   searchParams: Promise<{ edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadCategoriesWorkspace();
   const edit = d.categories.find(c => c.id === q.edit);
   const show = !!q.new || !!edit;
   const names = new Map(d.categories.map(c => [c.id, c.name]));

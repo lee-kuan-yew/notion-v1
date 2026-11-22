@@ -1,32 +1,39 @@
 import Link from 'next/link';
 import { requireOwner } from '@/lib/auth/owner';
-import { loadWorkspace } from '@/features/workspace/queries';
 import { PageHeader, Empty } from '@/components/shared/primitives';
 import { money } from '@/lib/finance';
 
 export default async function Search({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = '' } = await searchParams;
-  const [{ supabase }, d] = await Promise.all([requireOwner(), loadWorkspace()]);
-  const pagesRes = await supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false });
-  const allPages = pagesRes.error ? [] : pagesRes.data;
   const term = q.trim().toLocaleLowerCase('vi');
-  const pages = term ? allPages.filter(p => p.title.toLocaleLowerCase('vi').includes(term)) : [];
-  const projects = term ? d.projects.filter(p => `${p.name} ${p.description}`.toLocaleLowerCase('vi').includes(term)) : [];
-  const tasks = term ? d.tasks.filter(t => `${t.title} ${t.description}`.toLocaleLowerCase('vi').includes(term)) : [];
-  const transactions = term
-    ? d.transactions.filter(t => `${t.description} ${t.payee ?? ''} ${t.notes}`.toLocaleLowerCase('vi').includes(term))
-    : [];
+  const searchForm = (
+    <form action="/app/search" className="mb-6 flex gap-2">
+      <input className="input max-w-xl" name="q" defaultValue={q} placeholder="Nhập từ khóa..." autoFocus />
+      <button className="btn btn-primary">Tìm</button>
+    </form>
+  );
+  if (!term) {
+    return <><PageHeader title="Tìm kiếm" description="Tìm trang, dự án, công việc và giao dịch." />{searchForm}<Empty title="Nhập từ khóa để tìm kiếm" /></>;
+  }
+
+  const { supabase } = await requireOwner();
+  const [pagesRes, projectsRes, tasksRes, transactionsRes] = await Promise.all([
+    supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false }),
+    supabase.from('projects').select('id,name,description').order('updated_at', { ascending: false }),
+    supabase.from('tasks').select('id,title,description').order('created_at', { ascending: false }),
+    supabase.from('transactions').select('id,description,payee,type,notes,amount').order('transaction_date', { ascending: false }),
+  ]);
+  const allPages = pagesRes.error ? [] : pagesRes.data;
+  const pages = allPages.filter(p => p.title.toLocaleLowerCase('vi').includes(term));
+  const projects = (projectsRes.data ?? []).filter(p => `${p.name} ${p.description}`.toLocaleLowerCase('vi').includes(term));
+  const tasks = (tasksRes.data ?? []).filter(t => `${t.title} ${t.description}`.toLocaleLowerCase('vi').includes(term));
+  const transactions = (transactionsRes.data ?? []).filter(t => `${t.description} ${t.payee ?? ''} ${t.notes}`.toLocaleLowerCase('vi').includes(term));
 
   return (
     <>
       <PageHeader title="Tìm kiếm" description="Tìm trang, dự án, công việc và giao dịch." />
-      <form action="/app/search" className="mb-6 flex gap-2">
-        <input className="input max-w-xl" name="q" defaultValue={q} placeholder="Nhập từ khóa..." autoFocus />
-        <button className="btn btn-primary">Tìm</button>
-      </form>
-      {!term ? (
-        <Empty title="Nhập từ khóa để tìm kiếm" />
-      ) : pages.length + projects.length + tasks.length + transactions.length === 0 ? (
+      {searchForm}
+      {pages.length + projects.length + tasks.length + transactions.length === 0 ? (
         <Empty title="Không có kết quả" />
       ) : (
         <div className="grid gap-4">

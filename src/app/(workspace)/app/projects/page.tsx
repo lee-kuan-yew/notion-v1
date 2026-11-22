@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadProjectsWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { archiveProject } from '@/features/workspace/actions';
@@ -16,7 +16,7 @@ export default async function Projects({
   searchParams: Promise<{ new?: string; edit?: string; mode?: string; error?: string; saved?: string; status?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadProjectsWorkspace();
   const edit = d.projects.find(p => p.id === q.edit);
   const spending = new Map(d.spending.map(p => [p.project_id, p.spent]));
   const projects = q.status ? d.projects.filter(p => p.status === q.status) : d.projects;

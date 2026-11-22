@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
@@ -37,7 +39,11 @@ import {
   matchShortcut,
   type Platform,
 } from '@/lib/shortcuts';
-import { QuickSearchModal } from './quick-search-modal';
+
+const QuickSearchModal = dynamic(
+  () => import('./quick-search-modal').then(module => module.QuickSearchModal),
+  { ssr: false }
+);
 
 const sections = [
   {
@@ -150,7 +156,8 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
       <div className="flex h-14 items-center justify-between px-4">
         <Link href="/app" className="flex items-center gap-2 font-semibold">
           <span className="flex size-8 items-center justify-center">
-            <img src="/logo.png" alt="" className="size-7 dark:invert" />          </span>
+            <Image src="/logo.png" alt="" width={28} height={28} className="size-7 dark:invert" priority />
+          </span>
           {!collapsed && <span>Finanion</span>}
         </Link>
         <button type="button" className="md:hidden" aria-label="Đóng menu" onClick={() => setMobile(false)}>
@@ -301,7 +308,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
         )}
         <main className="mx-auto max-w-[1440px] px-4 py-7 md:px-8">{children}</main>
       </div>
-      <QuickSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {searchOpen && <QuickSearchModal open onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }

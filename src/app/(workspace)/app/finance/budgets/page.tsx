@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadBudgetsWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { saveBudget } from '@/features/workspace/actions';
@@ -15,7 +15,7 @@ export default async function Budgets({
   searchParams: Promise<{ month?: string; edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadWorkspace(undefined, q.month);
+  const d = await loadBudgetsWorkspace(q.month);
   const edit = d.budgets.find(b => b.id === q.edit);
   const show = !!q.new || !!edit;
   const actuals = new Map(d.actuals.map(a => [a.budget_id, a.spent]));

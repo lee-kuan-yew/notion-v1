@@ -1,6 +1,6 @@
 import { loadWorkspace } from '@/features/workspace/queries';
 import { reportData } from '@/features/finance/report-data';
-import { ReportCharts } from '@/components/charts/report-charts';
+import { DeferredReportCharts as ReportCharts } from '@/components/charts/deferred-report-charts';
 import { PeriodFilter } from '@/components/shared/period-filter';
 import { PageHeader,Metric } from '@/components/shared/primitives';
 import { money,cents } from '@/lib/finance';

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadTransactionsWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { filterTransactions, type TransactionFilters } from '@/features/finance/filters';
@@ -12,7 +12,7 @@ type Query = TransactionFilters & { edit?: string; new?: string; page?: string; 
 
 export default async function Transactions({ searchParams }: { searchParams: Promise<Query> }) {
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadTransactionsWorkspace();
   const edit = d.transactions.find(t => t.id === q.edit);
   const isDatabase = q.mode === 'database';
   const dbData = isDatabase ? await loadDatabase('transactions') : null;

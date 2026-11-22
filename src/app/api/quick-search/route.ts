@@ -1,5 +1,4 @@
 import { requireOwner } from '@/lib/auth/owner';
-import { loadWorkspace } from '@/features/workspace/queries';
 import { databaseConfig, databaseKeys } from '@/features/database/config';
 import { money } from '@/lib/finance';
 import { label } from '@/components/shared/format';
@@ -26,14 +25,6 @@ export async function GET(request: Request) {
     const { supabase } = await requireOwner();
     const { searchParams } = new URL(request.url);
     const term = (searchParams.get('q') ?? '').trim().toLocaleLowerCase('vi');
-
-    const [workspace, pagesResult] = await Promise.all([
-      loadWorkspace(),
-      supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false }),
-    ]);
-
-    const items: QuickSearchItem[] = [];
-
     const dbItems: QuickSearchItem[] = databaseKeys.map(key => ({
       id: `db-${key}`,
       title: `Bảng ${databaseConfig[key].title}`,
@@ -41,6 +32,22 @@ export async function GET(request: Request) {
       href: `/app/database/${key}`,
       group: 'Bảng dữ liệu',
     }));
+
+    if (!term) {
+      return Response.json(
+        { items: [...navShortcuts, ...dbItems].slice(0, 24) },
+        { headers: { 'Cache-Control': 'private, no-store' } }
+      );
+    }
+
+    const [pagesResult, projectsResult, tasksResult, transactionsResult] = await Promise.all([
+      supabase.from('pages').select('id,title,updated_at').order('updated_at', { ascending: false }),
+      supabase.from('projects').select('id,name,status,priority').order('updated_at', { ascending: false }),
+      supabase.from('tasks').select('id,title,status,priority').order('created_at', { ascending: false }),
+      supabase.from('transactions').select('id,description,payee,type,transaction_date,amount').order('transaction_date', { ascending: false }),
+    ]);
+
+    const items: QuickSearchItem[] = [];
 
     const pages = pagesResult.error ? [] : pagesResult.data;
     const pageItems: QuickSearchItem[] = pages.map(page => ({
@@ -51,7 +58,7 @@ export async function GET(request: Request) {
       group: 'Trang',
     }));
 
-    const projectItems: QuickSearchItem[] = workspace.projects.map(p => ({
+    const projectItems: QuickSearchItem[] = (projectsResult.data ?? []).map(p => ({
       id: `proj-${p.id}`,
       title: p.name,
       subtitle: `${label(p.status)} · ${label(p.priority)}`,
@@ -59,7 +66,7 @@ export async function GET(request: Request) {
       group: 'Dự án',
     }));
 
-    const taskItems: QuickSearchItem[] = workspace.tasks.map(t => ({
+    const taskItems: QuickSearchItem[] = (tasksResult.data ?? []).map(t => ({
       id: `task-${t.id}`,
       title: t.title,
       subtitle: `${label(t.status)} · ${label(t.priority)}`,
@@ -67,7 +74,7 @@ export async function GET(request: Request) {
       group: 'Công việc',
     }));
 
-    const txItems: QuickSearchItem[] = workspace.transactions.slice(0, 80).map(t => ({
+    const txItems: QuickSearchItem[] = (transactionsResult.data ?? []).slice(0, 80).map(t => ({
       id: `tx-${t.id}`,
       title: t.description || t.payee || label(t.type),
       subtitle: `${t.transaction_date} · ${money(t.amount)}`,

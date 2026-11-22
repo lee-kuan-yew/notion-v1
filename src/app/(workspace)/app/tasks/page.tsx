@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadTasksWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { TaskForm } from '@/features/projects/components/forms';
@@ -29,7 +29,7 @@ export default async function Tasks({
   }>;
 }) {
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadTasksWorkspace();
   const edit = d.tasks.find(t => t.id === q.edit);
   const projectNames = new Map(d.projects.map(p => [p.id, p.name]));
   const isDatabase = q.view === 'database';

@@ -32,12 +32,86 @@ function unwrap<T>(result: { data: T | null; error: { message: string } | null }
   if (result.data === null) throw new Error(`${label}: no data`);
   return result.data;
 }
-export async function loadWorkspace(period?: string, budgetMonth?: string, custom?: {from?:string;to?:string}) {
+
+async function workspaceContext() {
   const { supabase, user } = await requireOwner();
   const initialized = await supabase.rpc('initialize_owner');
   if (initialized.error) throw new Error(`Initialize owner: ${initialized.error.message}`);
-  const profileResult = await supabase.from('profiles').select('timezone').eq('id', user.id).single();
-  const today = todayInVietnam(profileResult.data?.timezone || 'Asia/Ho_Chi_Minh');
+  const profile = await supabase.from('profiles').select('timezone').eq('id', user.id).single();
+  return { supabase, today: todayInVietnam(profile.data?.timezone || 'Asia/Ho_Chi_Minh') };
+}
+
+export async function loadAccountsWorkspace() {
+  const { supabase, today } = await workspaceContext();
+  const [accounts, balances] = await Promise.all([
+    supabase.from('accounts').select('*').order('name'),
+    supabase.rpc('account_balances'),
+  ]);
+  return { today, accounts: unwrap(accounts, 'accounts'), balances: unwrap(balances, 'account balances') };
+}
+
+export async function loadCategoriesWorkspace() {
+  const { supabase } = await workspaceContext();
+  const categories = await supabase.from('categories').select('*').order('name');
+  return { categories: unwrap(categories, 'categories') };
+}
+
+export async function loadTransactionsWorkspace() {
+  const { supabase, today } = await workspaceContext();
+  const [accounts, categories, projects, transactions] = await Promise.all([
+    supabase.from('accounts').select('*').order('name'),
+    supabase.from('categories').select('*').order('name'),
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.from('transactions').select('*').order('transaction_date', { ascending: false }).order('created_at', { ascending: false }),
+  ]);
+  return {
+    today,
+    accounts: unwrap(accounts, 'accounts'),
+    categories: unwrap(categories, 'categories'),
+    projects: unwrap(projects, 'projects'),
+    transactions: unwrap(transactions, 'transactions'),
+  };
+}
+
+export async function loadProjectsWorkspace() {
+  const { supabase } = await workspaceContext();
+  const [projects, tasks, spending] = await Promise.all([
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.from('tasks').select('*').order('position').order('created_at'),
+    supabase.rpc('project_spending'),
+  ]);
+  return { projects: unwrap(projects, 'projects'), tasks: unwrap(tasks, 'tasks'), spending: unwrap(spending, 'project spending') };
+}
+
+export async function loadTasksWorkspace() {
+  const { supabase, today } = await workspaceContext();
+  const [projects, tasks] = await Promise.all([
+    supabase.from('projects').select('*').order('updated_at', { ascending: false }),
+    supabase.from('tasks').select('*').order('position').order('created_at'),
+  ]);
+  return { today, projects: unwrap(projects, 'projects'), tasks: unwrap(tasks, 'tasks') };
+}
+
+export async function loadBudgetsWorkspace(budgetMonth?: string) {
+  const { supabase, today } = await workspaceContext();
+  const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(budgetMonth ?? '') ? `${budgetMonth}-01` : `${today.slice(0, 7)}-01`;
+  const [budgets, categories, actuals, budgetTotals] = await Promise.all([
+    supabase.from('budgets').select('*').order('month_start', { ascending: false }),
+    supabase.from('categories').select('*').order('name'),
+    supabase.rpc('budget_actuals', { p_month: month }),
+    supabase.rpc('budget_month_totals', { p_month: month }),
+  ]);
+  return {
+    month,
+    budgets: unwrap(budgets, 'budgets'),
+    categories: unwrap(categories, 'categories'),
+    actuals: unwrap(actuals, 'budget actuals'),
+    budgetTotals: unwrap(budgetTotals, 'budget month totals')[0] ?? { budget: '0', spent: '0' },
+  };
+}
+
+export async function loadWorkspace(period?: string, budgetMonth?: string, custom?: {from?:string;to?:string}) {
+  const { supabase, today } = await workspaceContext();
   const { start, end } = periodBounds(period,today,custom);
   const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(budgetMonth ?? '') ? `${budgetMonth}-01` : `${today.slice(0,7)}-01`;
   const [accounts,categories,transactions,budgets,projects,tasks,milestones,balances,spending,periodSpending,actuals,budgetTotals,totals,monthly,expenseCategories] = await Promise.all([

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { loadWorkspace } from '@/features/workspace/queries';
+import { loadAccountsWorkspace } from '@/features/workspace/queries';
 import { loadDatabase } from '@/features/database/queries';
 import { DatabaseView } from '@/features/database/components/database-view';
 import { saveAccount, archiveRecord } from '@/features/workspace/actions';
@@ -16,7 +16,7 @@ export default async function Accounts({
   searchParams: Promise<{ edit?: string; new?: string; mode?: string; error?: string; saved?: string }>;
 }) {
   const q = await searchParams;
-  const d = await loadWorkspace();
+  const d = await loadAccountsWorkspace();
   const edit = d.accounts.find(a => a.id === q.edit);
   const show = !!q.new || !!edit;
   const balances = new Map(d.balances.map(b => [b.account_id, b.balance]));

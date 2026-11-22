@@ -1,4 +1,5 @@
 import { signIn } from './actions';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { isLocalMode } from '@/lib/local/mode';
 
@@ -20,7 +21,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <div className="relative px-6 sm:px-8">
           <div className="mb-8 flex items-center justify-center gap-3">
             <span className="flex size-12 items-center justify-center rounded-xl bg-black">
-              <img src="/logo.png" alt="" className="size-8 invert" />
+              <Image src="/logo.png" alt="" width={32} height={32} className="size-8 invert" priority />
             </span>
             <h1 className="text-[28px] font-semibold tracking-tight text-stone-900">Finanion</h1>
           </div>
