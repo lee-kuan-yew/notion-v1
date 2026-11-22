@@ -21,7 +21,7 @@ async function pickDropdown(page: Page, label: string, optionText: string) {
   await page.getByRole('listbox', { name: label, exact: true }).getByRole('option', { name: optionText, exact: true }).click();
 }
 
-test.describe.serial('Personal OS Notion-like Database & Editor E2E (Local Mode)', () => {
+test.describe.serial('Finanion Notion-like Database & Editor E2E (Local Mode)', () => {
   test('1. All 7 database routes, sidebar navigation, and integrated Finance/Projects modes load cleanly', async ({ page }) => {
     const errors = trackErrors(page);
 

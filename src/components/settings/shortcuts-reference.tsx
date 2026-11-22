@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { SHORTCUT_CATALOG, detectPlatform, formatShortcut, type Platform } from '@/lib/shortcuts';
 
 const scopeMeta = [
-  { scope: 'global' as const, title: 'Phím tắt toàn cục (Global)', description: 'Hoạt động trên toàn không gian làm việc Personal OS.' },
+  { scope: 'global' as const, title: 'Phím tắt toàn cục (Global)', description: 'Hoạt động trên toàn không gian làm việc Finanion.' },
   { scope: 'editor' as const, title: 'Trình soạn thảo (BlockNote Editor)', description: 'Định dạng văn bản, mở lệnh Slash và thao tác khối.' },
   { scope: 'table' as const, title: 'Bảng dữ liệu (Database Table)', description: 'Điều hướng ô và chỉnh sửa trực tiếp bằng bàn phím.' },
 ];

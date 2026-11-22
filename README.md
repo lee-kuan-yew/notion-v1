@@ -1,4 +1,4 @@
-# Personal OS
+# Finanion
 
 Private workspace for personal finance and projects. Built with Next.js 16 App Router, React 19, TypeScript, Tailwind CSS, shadcn style components, Supabase Auth/PostgreSQL, RLS, Recharts, TanStack Table, React Hook Form, Zod, dnd-kit and Sonner.
 
@@ -19,7 +19,7 @@ For a populated local example, stop the dev server, run `pnpm seed:local`, then 
 
 ## Setup (isolated Supabase project)
 
-1. Create a **new** Supabase project named Personal OS. Do not reuse another site's production database.
+1. Create a **new** Supabase project named Finanion. Do not reuse another site's production database.
 2. In Supabase Authentication, disable public email signups. Create one user for the owner from the Auth dashboard. Copy that user's UUID.
 3. In Project Settings → API, copy the project URL and publishable key. Keep service-role keys out of this repository.
 4. Copy `.env.example` to `.env.local` and set:

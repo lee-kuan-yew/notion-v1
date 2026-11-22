@@ -378,7 +378,7 @@ export function BlockEditor({
         aliases: string[],
         subtext: string,
         run: () => void,
-        group = 'Personal OS'
+        group = 'Finanion'
       ): DefaultReactSuggestionItem => ({
         title,
         aliases,

@@ -149,10 +149,9 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
     <>
       <div className="flex h-14 items-center justify-between px-4">
         <Link href="/app" className="flex items-center gap-2 font-semibold">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-ink text-white dark:bg-white dark:text-stone-900">
-            P
-          </span>
-          {!collapsed && <span>Personal OS</span>}
+          <span className="flex size-8 items-center justify-center">
+            <img src="/logo.png" alt="" className="size-7 dark:invert" />          </span>
+          {!collapsed && <span>Finanion</span>}
         </Link>
         <button type="button" className="md:hidden" aria-label="Đóng menu" onClick={() => setMobile(false)}>
           <X size={20} />
@@ -228,7 +227,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
           <button type="button" className="md:hidden" aria-label="Mở menu" onClick={() => setMobile(true)}>
             <Menu size={20} />
           </button>
-          <span className="truncate text-sm font-semibold">Personal OS</span>
+          <span className="truncate text-sm font-semibold">Finanion</span>
           {localMode && <span className="badge">Local</span>}
           <div className="ml-auto flex items-center gap-2">
             <button

@@ -1,4 +1,4 @@
-# Personal OS architecture
+# Finanion architecture
 
 ## Audit, 2026-11-22
 The starting workspace contains only an empty `!.html` and is not a Git repository. There is no app, package lock, configuration, tests, database, or user code to migrate. Lipi is a WIP Notion clone with collaboration and a different persistence stack; it is a visual reference only. A clean Next.js App Router project avoids inheriting unrelated collaboration code and experimental dependencies.
