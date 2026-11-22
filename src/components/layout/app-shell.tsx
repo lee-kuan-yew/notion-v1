@@ -45,13 +45,17 @@ const QuickSearchModal = dynamic(
   { ssr: false }
 );
 
-const sections = [
+const topItems = [
+  ['/app', 'Tổng quan', LayoutDashboard],
+  ['/app/pages', 'Trang & Ghi chú', FileText],
+] as const;
+
+const navGroups = [
   {
-    title: 'Workspace',
+    title: 'Tài chính',
+    icon: Wallet,
     items: [
-      ['/app', 'Tổng quan', LayoutDashboard],
-      ['/app/pages', 'Trang & Ghi chú', FileText],
-      ['/app/finance', 'Tài chính', Wallet],
+      ['/app/finance', 'Tổng quan tài chính', Wallet],
       ['/app/finance/transactions', 'Giao dịch', ArrowLeftRight],
       ['/app/finance/accounts', 'Tài khoản', Landmark],
       ['/app/finance/budgets', 'Ngân sách', PiggyBank],
@@ -60,7 +64,8 @@ const sections = [
     ],
   },
   {
-    title: 'Projects',
+    title: 'Dự án',
+    icon: FolderKanban,
     items: [
       ['/app/projects', 'Dự án', FolderKanban],
       ['/app/tasks', 'Công việc', ListTodo],
@@ -68,6 +73,7 @@ const sections = [
   },
   {
     title: 'Databases',
+    icon: Table2,
     items: [
       ['/app/database/transactions', 'DB Giao dịch', Table2],
       ['/app/database/accounts', 'DB Tài khoản', Table2],
@@ -79,7 +85,8 @@ const sections = [
     ],
   },
   {
-    title: 'System',
+    title: 'Hệ thống',
+    icon: Settings,
     items: [
       ['/app/search', 'Tìm kiếm', Search],
       ['/app/settings', 'Cài đặt', Settings],
@@ -88,6 +95,10 @@ const sections = [
   },
 ] as const;
 
+function isActivePath(path: string, href: string) {
+  return path === href || (href !== '/app' && href !== '/app/settings' && path.startsWith(`${href}/`));
+}
+
 export function AppShell({ children, localMode = false }: { children: React.ReactNode; localMode?: boolean }) {
   const path = usePathname();
   const router = useRouter();
@@ -95,6 +106,7 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
   const [collapsed, setCollapsed] = useState(false);
   const [quick, setQuick] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [platform] = useState<Platform>(() => detectPlatform());
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -158,39 +170,77 @@ export function AppShell({ children, localMode = false }: { children: React.Reac
           <span className="flex size-8 items-center justify-center">
             <Image src="/logo.png" alt="" width={28} height={28} className="size-7 dark:invert" priority />
           </span>
-          {!collapsed && <span>Finanion</span>}
+          <span className={collapsed ? 'md:hidden' : ''}>Finanion</span>
         </Link>
         <button type="button" className="md:hidden" aria-label="Đóng menu" onClick={() => setMobile(false)}>
           <X size={20} />
         </button>
       </div>
-      <nav className="flex-1 overflow-auto px-2 pb-5">
-        {sections.map(s => (
-          <div key={s.title} className="mt-4">
-            <p className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted ${collapsed ? 'md:hidden' : ''}`}>
-              {s.title}
-            </p>
-            {s.items.map(([href, itemLabel, Icon]) => {
-              const active =
-                path === href ||
-                (href !== '/app' && href !== '/app/settings' && path.startsWith(href + '/'));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  title={itemLabel}
-                  onClick={() => setMobile(false)}
-                  className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-1.5 text-[13px] ${
-                    active ? 'bg-soft font-semibold text-ink' : 'text-muted hover:bg-soft hover:text-ink'
-                  }`}
-                >
-                  <Icon size={16} />
-                  {!collapsed && <span className="truncate">{itemLabel}</span>}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+      <nav className="flex-1 overflow-auto px-2 pb-5 pt-3">
+        {topItems.map(([href, itemLabel, Icon]) => {
+          const active = isActivePath(path, href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              title={itemLabel}
+              onClick={() => setMobile(false)}
+              className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] ${
+                active ? 'bg-soft font-semibold text-ink' : 'text-muted hover:bg-soft hover:text-ink'
+              }`}
+            >
+              <Icon size={16} />
+              <span className={`truncate ${collapsed ? 'md:hidden' : ''}`}>{itemLabel}</span>
+            </Link>
+          );
+        })}
+        <div className="my-3 border-t border-line" />
+        {navGroups.map(group => {
+          const groupActive = group.items.some(([href]) => isActivePath(path, href));
+          const GroupIcon = group.icon;
+          const groupKey = `${path}:${group.title}`;
+          return (
+            <details
+              key={groupKey}
+              className="group mb-1"
+              open={openGroups[groupKey] ?? groupActive}
+              onToggle={event => {
+                const open = event.currentTarget.open;
+                setOpenGroups(current => current[groupKey] === open ? current : { ...current, [groupKey]: open });
+              }}
+            >
+              <summary
+                title={group.title}
+                className={`flex cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2 text-[13px] [&::-webkit-details-marker]:hidden ${
+                  groupActive ? 'font-semibold text-ink' : 'text-muted hover:bg-soft hover:text-ink'
+                }`}
+              >
+                <GroupIcon size={16} />
+                <span className={`min-w-0 flex-1 truncate ${collapsed ? 'md:hidden' : ''}`}>{group.title}</span>
+                <ChevronDown size={14} className={`transition-transform group-open:rotate-180 ${collapsed ? 'md:hidden' : ''}`} />
+              </summary>
+              <div className={`mt-0.5 ${collapsed ? 'md:hidden' : ''}`}>
+                {group.items.map(([href, itemLabel, Icon]) => {
+                  const active = isActivePath(path, href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      title={itemLabel}
+                      onClick={() => setMobile(false)}
+                      className={`mb-0.5 flex items-center gap-2.5 rounded-lg py-1.5 pl-9 pr-3 text-[13px] ${
+                        active ? 'bg-soft font-semibold text-ink' : 'text-muted hover:bg-soft hover:text-ink'
+                      }`}
+                    >
+                      <Icon size={14} />
+                      <span className="truncate">{itemLabel}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
       </nav>
       <div className="border-t border-line p-3">
         <button
