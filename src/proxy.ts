@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 export async function proxy(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const url = process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY;
   if (!url || !key) return NextResponse.next();
   let response = NextResponse.next({ request });
   const supabase = createServerClient<Database>(url, key, {

@@ -25,8 +25,8 @@ For a populated local example, stop the dev server, run `pnpm seed:local`, then 
 4. Copy `.env.example` to `.env.local` and set:
 
    ```dotenv
-   NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+   NEXT_PUBLIC_FINANION_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+   NEXT_PUBLIC_FINANION_SUPABASE_KEY=YOUR_PUBLISHABLE_KEY
    PERSONAL_OS_OWNER_USER_ID=YOUR_AUTH_USER_UUID
    SUPABASE_PROJECT_ID=YOUR_PROJECT_REF
    ```

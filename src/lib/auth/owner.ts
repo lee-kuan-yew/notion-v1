@@ -9,7 +9,7 @@ export async function requireOwner() {
     return { supabase: await createClient(), user: { id: LOCAL_OWNER_ID, email: 'local@personal.os' } };
   }
   const ownerId = process.env.PERSONAL_OS_OWNER_USER_ID;
-  if (!ownerId || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) redirect('/login');
+  if (!ownerId || !process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL || !process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY) redirect('/login');
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user || user.id !== ownerId) redirect('/login');

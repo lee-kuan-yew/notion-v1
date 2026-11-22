@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 const ready =
   !!process.env.PERSONAL_OS_TEST_EMAIL &&
   !!process.env.PERSONAL_OS_TEST_PASSWORD &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !!process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL &&
   !!process.env.PERSONAL_OS_OWNER_USER_ID;
 
 test.skip(!ready, 'Requires an isolated Supabase test project and owner credentials.');

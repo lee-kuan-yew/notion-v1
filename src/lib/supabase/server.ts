@@ -10,8 +10,8 @@ export async function createClient() {
     return createLocalClient() as unknown as SupabaseClient<Database>;
   }
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const url = process.env.NEXT_PUBLIC_FINANION_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_FINANION_SUPABASE_KEY;
   if (!url || !key) throw new Error('Supabase is not configured. See README.md.');
   return createServerClient<Database>(url, key, {
     cookies: {
