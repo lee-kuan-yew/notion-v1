@@ -1,0 +1,1 @@
+export default function Loading() {return <div className="animate-pulse"><div className="mb-6 h-8 w-48 rounded bg-soft"/><div className="grid gap-4 sm:grid-cols-4">{[1,2,3,4].map(i=><div key={i} className="h-28 rounded-xl bg-soft"/>)}</div><div className="mt-5 h-64 rounded-xl bg-soft"/></div>}

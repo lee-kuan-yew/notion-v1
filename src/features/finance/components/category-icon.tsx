@@ -1,0 +1,4 @@
+import { BriefcaseBusiness, Plus, Utensils, Car, House, ShoppingBag, FolderKanban, Plane, HeartPulse, BookOpen, Wallet, Tags, Coffee, Gift } from 'lucide-react';
+const icons={BriefcaseBusiness,Plus,Utensils,Car,House,ShoppingBag,FolderKanban,Plane,HeartPulse,BookOpen,Wallet,Tags,Coffee,Gift};
+export const iconChoices=[['BriefcaseBusiness','Công việc'],['Plus','Khác'],['Utensils','Ăn uống'],['Car','Di chuyển'],['House','Nhà ở'],['ShoppingBag','Mua sắm'],['FolderKanban','Dự án'],['Plane','Du lịch'],['HeartPulse','Sức khỏe'],['BookOpen','Học tập'],['Wallet','Tiền'],['Tags','Danh mục'],['Coffee','Cà phê'],['Gift','Quà tặng']] as const;
+export function CategoryIcon({name,color}:{name:string|null;color:string}) {const Icon=icons[name as keyof typeof icons]??Tags;return <Icon size={16} color={color} aria-hidden="true"/>;}
