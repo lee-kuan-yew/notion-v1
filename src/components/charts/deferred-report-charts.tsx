@@ -13,7 +13,7 @@ function ChartPlaceholder() {
   return (
     <div className="grid gap-4 lg:grid-cols-2" aria-hidden="true">
       {Array.from({ length: 5 }, (_, index) => (
-        <div key={index} className="card h-[310px] animate-pulse bg-soft/30" />
+        <div key={index} className="h-[310px]" />
       ))}
     </div>
   );

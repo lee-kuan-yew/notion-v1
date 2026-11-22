@@ -1274,7 +1274,7 @@ export function DatabaseRow({
 export function DatabaseTableSkeleton({ cols = 6 }: { cols?: number }) {
   return (
     <div className="table-wrap p-4">
-      <div className="space-y-3 animate-pulse">
+      <div className="space-y-3">
         <div className="h-8 rounded bg-soft" />
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
